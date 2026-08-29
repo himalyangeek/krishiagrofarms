@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { isValidIndianMobile } from '../lib/validation'
+import { lookupPincode } from '../lib/pincodeLookup'
 import LocationHelpModal from './LocationHelpModal'
 import StateCitySelect from './StateCitySelect'
 
@@ -14,12 +15,61 @@ export default function AddressModal({ initialAddress, onSave, onClose }) {
     initialAddress?.mobile || localStorage.getItem(LAST_MOBILE_KEY) || ''
   )
   const [pincode, setPincode] = useState(initialAddress?.pincode || '')
+  const [pincodeError, setPincodeError] = useState('')
   const [landmark, setLandmark] = useState(initialAddress?.landmark || '')
   const [coords, setCoords] = useState(initialAddress?.coords || null)
   // locating | granted | error | unsupported
   const [locStatus, setLocStatus] = useState('locating')
   const [showLocationHelp, setShowLocationHelp] = useState(false)
   const [error, setError] = useState('')
+
+  // Cross-checks whatever combination of state/city/pincode is currently set.
+  // Called after every change to any of the three so mismatches surface
+  // immediately, regardless of which field the user filled in first.
+  async function checkConsistency(nextPincode, nextState, nextCity) {
+    if (nextPincode.length !== 6) {
+      setPincodeError('')
+      return
+    }
+    const loc = await lookupPincode(nextPincode)
+    if (!loc) {
+      setPincodeError('')
+      return
+    }
+    if (nextState && nextState !== loc.state) {
+      setPincodeError(`Pincode ${nextPincode} belongs to ${loc.city}, ${loc.state} — not ${nextState}.`)
+      return
+    }
+    if (nextCity && nextCity !== loc.city) {
+      setPincodeError(`Pincode ${nextPincode} belongs to ${loc.city}, ${loc.state} — not ${nextCity}.`)
+      return
+    }
+    setPincodeError('')
+  }
+
+  async function handlePincodeChange(raw) {
+    const digits = raw.replace(/\D/g, '').slice(0, 6)
+    setPincode(digits)
+    if (digits.length === 6) {
+      const loc = await lookupPincode(digits)
+      if (loc && (!state || state === loc.state) && (!city || city === loc.city)) {
+        setState(loc.state)
+        setCity(loc.city)
+      }
+    }
+    checkConsistency(digits, state, city)
+  }
+
+  function handleStateChange(nextState) {
+    setState(nextState)
+    setCity('')
+    checkConsistency(pincode, nextState, '')
+  }
+
+  function handleCityChange(nextCity) {
+    setCity(nextCity)
+    checkConsistency(pincode, state, nextCity)
+  }
 
   useEffect(() => {
     fetchLocation()
@@ -62,6 +112,10 @@ export default function AddressModal({ initialAddress, onSave, onClose }) {
     }
     if (!/^\d{4,6}$/.test(pincode.trim())) {
       setError('Enter a valid pincode.')
+      return
+    }
+    if (pincodeError) {
+      setError(pincodeError)
       return
     }
     if (!isValidIndianMobile(mobile)) {
@@ -129,14 +183,16 @@ export default function AddressModal({ initialAddress, onSave, onClose }) {
             value={line2}
             onChange={(e) => setLine2(e.target.value)}
           />
-          <StateCitySelect state={state} city={city} onStateChange={setState} onCityChange={setCity} />
           <input
             className="input-field"
             placeholder="Pincode *"
             value={pincode}
-            onChange={(e) => setPincode(e.target.value)}
+            onChange={(e) => handlePincodeChange(e.target.value)}
             inputMode="numeric"
+            maxLength={6}
           />
+          {pincodeError && <p className="text-sm text-red-600">{pincodeError}</p>}
+          <StateCitySelect state={state} city={city} onStateChange={handleStateChange} onCityChange={handleCityChange} />
           <input
             className="input-field"
             placeholder="Landmark"

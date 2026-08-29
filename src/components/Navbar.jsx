@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 
 export default function Navbar() {
   const { user, isAdmin, logout } = useAuth()
+  const { clearCart } = useCart()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
   function handleLogout() {
     setMenuOpen(false)
     logout()
+    clearCart()
     navigate('/')
   }
 

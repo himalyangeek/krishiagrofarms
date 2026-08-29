@@ -96,9 +96,12 @@ export function AuthProvider({ children }) {
   }
 
   async function loginWithGoogle() {
+    // window.location.origin alone drops the /krishiagrofarms/ subpath that
+    // GitHub Pages serves this app under (Vite's `base`), which would bounce
+    // Google sign-in back to the bare domain root instead of into the app.
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: window.location.origin + import.meta.env.BASE_URL },
     })
     if (error) throw new Error(error.message)
   }

@@ -152,17 +152,17 @@ begin
     end if;
 
     return query
-    update public."User"
+    update public."User" as u
     set "password" = crypt(p_password, gen_salt('bf')),
         "firstName" = coalesce(nullif(v_existing."firstName", ''), p_first_name),
         "lastName" = coalesce(nullif(v_existing."lastName", ''), p_last_name)
-    where "userID" = v_existing."userID"
-    returning "userID", "firstName", "lastName", "mobileNo", "userType", "email", true;
+    where u."userID" = v_existing."userID"
+    returning u."userID", u."firstName", u."lastName", u."mobileNo", u."userType", u."email", true;
   else
     return query
-    insert into public."User" ("email", "firstName", "lastName", "password")
+    insert into public."User" as u ("email", "firstName", "lastName", "password")
     values (v_email, p_first_name, p_last_name, crypt(p_password, gen_salt('bf')))
-    returning "userID", "firstName", "lastName", "mobileNo", "userType", "email", true;
+    returning u."userID", u."firstName", u."lastName", u."mobileNo", u."userType", u."email", true;
   end if;
 end;
 $$;

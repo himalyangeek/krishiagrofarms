@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react'
 import { isValidIndianMobile } from '../lib/validation'
 import LocationHelpModal from './LocationHelpModal'
+import StateCitySelect from './StateCitySelect'
+
+const LAST_MOBILE_KEY = 'agro-store:lastMobile'
 
 export default function AddressModal({ initialAddress, onSave, onClose }) {
   const [line1, setLine1] = useState(initialAddress?.line1 || '')
   const [line2, setLine2] = useState(initialAddress?.line2 || '')
+  const [state, setState] = useState(initialAddress?.state || '')
   const [city, setCity] = useState(initialAddress?.city || '')
-  const [mobile, setMobile] = useState(initialAddress?.mobile || '')
+  const [mobile, setMobile] = useState(
+    initialAddress?.mobile || localStorage.getItem(LAST_MOBILE_KEY) || ''
+  )
   const [pincode, setPincode] = useState(initialAddress?.pincode || '')
   const [landmark, setLandmark] = useState(initialAddress?.landmark || '')
   const [coords, setCoords] = useState(initialAddress?.coords || null)
@@ -50,8 +56,8 @@ export default function AddressModal({ initialAddress, onSave, onClose }) {
       setShowLocationHelp(true)
       return
     }
-    if (!line1.trim() || !city.trim() || !pincode.trim() || !mobile.trim()) {
-      setError('Address line 1, city, pincode, and contact mobile number are required.')
+    if (!line1.trim() || !state || !city || !pincode.trim() || !mobile.trim()) {
+      setError('Address line 1, state, city, pincode, and contact mobile number are required.')
       return
     }
     if (!/^\d{4,6}$/.test(pincode.trim())) {
@@ -63,10 +69,12 @@ export default function AddressModal({ initialAddress, onSave, onClose }) {
       return
     }
     setError('')
+    localStorage.setItem(LAST_MOBILE_KEY, mobile.trim())
     onSave({
       line1: line1.trim(),
       line2: line2.trim(),
-      city: city.trim(),
+      state,
+      city,
       pincode: pincode.trim(),
       landmark: landmark.trim(),
       mobile: mobile.trim(),
@@ -121,21 +129,14 @@ export default function AddressModal({ initialAddress, onSave, onClose }) {
             value={line2}
             onChange={(e) => setLine2(e.target.value)}
           />
-          <div className="flex gap-3">
-            <input
-              className="input-field"
-              placeholder="City *"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
-            <input
-              className="input-field"
-              placeholder="Pincode *"
-              value={pincode}
-              onChange={(e) => setPincode(e.target.value)}
-              inputMode="numeric"
-            />
-          </div>
+          <StateCitySelect state={state} city={city} onStateChange={setState} onCityChange={setCity} />
+          <input
+            className="input-field"
+            placeholder="Pincode *"
+            value={pincode}
+            onChange={(e) => setPincode(e.target.value)}
+            inputMode="numeric"
+          />
           <input
             className="input-field"
             placeholder="Landmark"

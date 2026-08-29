@@ -148,7 +148,7 @@ export default function Checkout() {
         {address ? (
           <p className="mt-2 text-sm text-leaf-700">
             {address.line1}
-            {address.line2 ? `, ${address.line2}` : ''}, {address.city}, {address.pincode}
+            {address.line2 ? `, ${address.line2}` : ''}, {address.city}, {address.state} {address.pincode}
             {address.landmark ? ` (near ${address.landmark})` : ''}
             {address.mobile ? ` · contact ${address.mobile}` : ''}
             {address.coords ? ' · location captured' : ''}

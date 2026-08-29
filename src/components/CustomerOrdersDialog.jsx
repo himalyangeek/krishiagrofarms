@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { formatAddress, parseAddress } from '../lib/address'
 import { isValidIndianMobile } from '../lib/validation'
 import { useAuth } from '../context/AuthContext'
+import StateCitySelect from './StateCitySelect'
 
 const STATUS_OPTIONS = ['Packed', 'Dispatched', 'Delivered']
 
@@ -18,6 +19,7 @@ function AddressEditForm({ order, onCancel, onSaved }) {
   const existing = parseAddress(order.deliveryAddress) || {}
   const [line1, setLine1] = useState(existing.line1 || '')
   const [line2, setLine2] = useState(existing.line2 || '')
+  const [state, setState] = useState(existing.state || '')
   const [city, setCity] = useState(existing.city || '')
   const [mobile, setMobile] = useState(existing.mobile || '')
   const [pincode, setPincode] = useState(existing.pincode || '')
@@ -26,8 +28,8 @@ function AddressEditForm({ order, onCancel, onSaved }) {
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
-    if (!line1.trim() || !city.trim() || !pincode.trim() || !mobile.trim()) {
-      setError('Line 1, city, pincode, and contact mobile number are required.')
+    if (!line1.trim() || !state || !city || !pincode.trim() || !mobile.trim()) {
+      setError('Line 1, state, city, pincode, and contact mobile number are required.')
       return
     }
     if (!isValidIndianMobile(mobile)) {
@@ -41,7 +43,8 @@ function AddressEditForm({ order, onCancel, onSaved }) {
         ...existing,
         line1: line1.trim(),
         line2: line2.trim(),
-        city: city.trim(),
+        state,
+        city,
         pincode: pincode.trim(),
         landmark: landmark.trim(),
         mobile: mobile.trim(),
@@ -64,15 +67,13 @@ function AddressEditForm({ order, onCancel, onSaved }) {
     <div className="mt-3 space-y-2 rounded-xl border border-leaf-200 bg-leaf-50 p-3">
       <input className="input-field" placeholder="Line 1" value={line1} onChange={(e) => setLine1(e.target.value)} />
       <input className="input-field" placeholder="Line 2" value={line2} onChange={(e) => setLine2(e.target.value)} />
-      <div className="flex gap-2">
-        <input className="input-field" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
-        <input
-          className="input-field"
-          placeholder="Pincode"
-          value={pincode}
-          onChange={(e) => setPincode(e.target.value)}
-        />
-      </div>
+      <StateCitySelect state={state} city={city} onStateChange={setState} onCityChange={setCity} />
+      <input
+        className="input-field"
+        placeholder="Pincode"
+        value={pincode}
+        onChange={(e) => setPincode(e.target.value)}
+      />
       <input
         className="input-field"
         placeholder="Landmark"
@@ -148,7 +149,9 @@ export default function CustomerOrdersDialog({ customer, orders, onClose, onOrde
           {orders.map((order) => (
             <div key={order.orderID} className="rounded-xl border border-leaf-100 p-4">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-leaf-500">{order.orderID}</span>
+                <span className="font-mono text-xs font-semibold text-leaf-700">
+                  {order.orderCode || order.orderID}
+                </span>
                 <span className="rounded-full bg-leaf-100 px-3 py-1 text-xs font-semibold text-leaf-700">
                   {order.orderStatus || 'Placed'}
                 </span>

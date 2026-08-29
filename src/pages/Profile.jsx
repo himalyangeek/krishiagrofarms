@@ -184,7 +184,9 @@ export default function Profile() {
           {orders.map((order) => (
             <div key={order.orderID} className="rounded-xl border border-leaf-100 p-4">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-leaf-500">{order.orderID}</span>
+                <span className="font-mono text-xs font-semibold text-leaf-700">
+                  {order.orderCode || order.orderID}
+                </span>
                 <span className="rounded-full bg-leaf-100 px-3 py-1 text-xs font-semibold text-leaf-700">
                   {order.orderStatus}
                 </span>

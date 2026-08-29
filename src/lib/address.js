@@ -14,6 +14,7 @@ export function formatAddress(raw) {
     a.line1,
     a.line2,
     a.city,
+    a.state,
     a.pincode,
     a.landmark ? `near ${a.landmark}` : null,
     a.mobile ? `contact ${a.mobile}` : null,

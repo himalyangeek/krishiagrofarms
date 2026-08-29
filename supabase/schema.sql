@@ -274,6 +274,38 @@ alter table public."Order" drop constraint if exists "Order_orderStatus_check";
 alter table public."Order" add constraint "Order_orderStatus_check"
   check ("orderStatus" in ('Placed', 'Packed', 'Dispatched', 'Delivered') or "orderStatus" is null);
 
+-- Human-readable business order id (distinct from the orderID uuid PK), e.g.
+-- "UPLU226021AD4C5F" — state code + city code + pincode + random suffix.
+alter table public."Order" add column if not exists "orderCode" text;
+
+-- Two-letter code from a place name: initials of the first two words for a
+-- multi-word name ("Uttar Pradesh" -> UP, "Jammu and Kashmir" -> JK, ignoring
+-- "and"), else the first two letters ("Lucknow" -> LU).
+create or replace function public.location_code(p_name text)
+returns text
+language plpgsql
+immutable
+as $$
+declare
+  v_words text[];
+begin
+  if p_name is null or trim(p_name) = '' then
+    return 'XX';
+  end if;
+
+  v_words := array(
+    select w from unnest(regexp_split_to_array(trim(p_name), '\s+')) w
+    where lower(w) <> 'and'
+  );
+
+  if array_length(v_words, 1) >= 2 then
+    return upper(substr(v_words[1], 1, 1) || substr(v_words[2], 1, 1));
+  end if;
+
+  return upper(substr(p_name, 1, 2));
+end;
+$$;
+
 drop function if exists public.place_order(uuid, json, double precision, text);
 
 -- Place an order. p_payment_method is 'ONLINE' (mock payment, marked Paid
@@ -296,6 +328,8 @@ declare
   v_payment_status text;
   v_amount_paid double precision;
   v_payment_id text;
+  v_address jsonb;
+  v_order_code text;
 begin
   if not exists (select 1 from public."User" u where u."userID" = p_user_id) then
     raise exception 'INVALID_USER';
@@ -311,13 +345,25 @@ begin
     v_payment_id := 'MOCK-' || gen_random_uuid()::text;
   end if;
 
+  begin
+    v_address := p_delivery_address::jsonb;
+  exception when others then
+    v_address := '{}'::jsonb;
+  end;
+
+  v_order_code :=
+    public.location_code(v_address ->> 'state') ||
+    public.location_code(v_address ->> 'city') ||
+    coalesce(v_address ->> 'pincode', '000000') ||
+    upper(substr(md5(gen_random_uuid()::text), 1, 6));
+
   insert into public."Order" (
     "userID", "productBasket", "orderStatus", "orderDate",
-    "billAmount", "paymentStatus", "amountPaid", "paymentID", "deliveryAddress"
+    "billAmount", "paymentStatus", "amountPaid", "paymentID", "deliveryAddress", "orderCode"
   )
   values (
     p_user_id, p_product_basket, 'Placed', now(),
-    p_bill_amount, v_payment_status, v_amount_paid, v_payment_id, p_delivery_address
+    p_bill_amount, v_payment_status, v_amount_paid, v_payment_id, p_delivery_address, v_order_code
   )
   returning "orderID" into v_order_id;
 
@@ -339,9 +385,12 @@ $$;
 
 -- Admin: every order, with the customer's name/mobile/email flattened in so
 -- the dashboard doesn't need a second round trip per row.
+drop function if exists public.admin_get_all_orders(uuid);
+
 create or replace function public.admin_get_all_orders(p_admin_user_id uuid)
 returns table (
   "orderID" uuid,
+  "orderCode" text,
   "userID" uuid,
   "firstName" text,
   "lastName" text,
@@ -368,7 +417,7 @@ begin
   end if;
 
   return query
-  select o."orderID", o."userID", u."firstName", u."lastName", u."mobileNo", u."email",
+  select o."orderID", o."orderCode", o."userID", u."firstName", u."lastName", u."mobileNo", u."email",
          o."orderStatus", o."orderDate", o."billAmount", o."paymentStatus", o."amountPaid",
          o."paymentID", o."deliveryAddress", o."productBasket"
   from public."Order" o

@@ -4,7 +4,6 @@ import { useCart } from '../context/CartContext'
 export default function ProductDetailDialog({ product, onClose }) {
   const { addItem } = useCart()
   const [quantity, setQuantity] = useState(1)
-  const [added, setAdded] = useState(false)
 
   if (!product) return null
 
@@ -12,8 +11,6 @@ export default function ProductDetailDialog({ product, onClose }) {
 
   function handleAdd() {
     addItem(product, quantity)
-    setAdded(true)
-    setTimeout(() => setAdded(false), 1500)
   }
 
   return (
@@ -94,7 +91,7 @@ export default function ProductDetailDialog({ product, onClose }) {
               disabled={maxQty === 0}
               className="btn-primary flex-1"
             >
-              {added ? 'Added ✓' : 'Add to basket'}
+              Add to basket
             </button>
           </div>
         </div>

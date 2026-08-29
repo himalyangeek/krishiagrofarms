@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 
 export default function ProductDetailDialog({ product, onClose }) {
-  const { addItem } = useCart()
+  const { addItem, totalItems, totalAmount } = useCart()
+  const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)
 
   if (!product) return null
@@ -94,6 +96,24 @@ export default function ProductDetailDialog({ product, onClose }) {
               Add to basket
             </button>
           </div>
+
+          {totalItems > 0 && (
+            <button
+              onClick={() => {
+                onClose()
+                navigate('/checkout')
+              }}
+              className="flex w-full items-center justify-between rounded-2xl bg-leaf-700 px-5 py-3 text-white transition hover:bg-leaf-800"
+            >
+              <span className="font-semibold">
+                Go to basket ({totalItems} item{totalItems > 1 ? 's' : ''})
+              </span>
+              <span className="flex items-center gap-2 font-display font-semibold">
+                ₹{totalAmount.toFixed(0)}
+                <span aria-hidden>→</span>
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>

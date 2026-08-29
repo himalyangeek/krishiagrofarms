@@ -137,7 +137,8 @@ export default function CustomerOrdersDialog({ customer, orders, onClose, onOrde
               {customer.firstName} {customer.lastName}
             </h2>
             <p className="text-sm text-leaf-600">
-              {customer.mobileNo || 'No mobile on file'} · {customer.email || 'No email on file'}
+              {customer.mobileNo || parseAddress(customer.deliveryAddress)?.mobile || 'No mobile on file'} ·{' '}
+              {customer.email || 'No email on file'}
             </p>
           </div>
           <button onClick={onClose} className="text-leaf-500" aria-label="Close">

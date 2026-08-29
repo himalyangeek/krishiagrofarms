@@ -21,7 +21,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 border-b border-leaf-100 bg-cream/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link to="/" onClick={closeMenu} className="flex items-center gap-2 font-display text-xl font-semibold text-leaf-800">
-          <img src="/leaf.svg" alt="" className="h-7 w-7" />
+          <img src={`${import.meta.env.BASE_URL}leaf.svg`} alt="" className="h-7 w-7" />
           Harit Kheti
         </Link>
 

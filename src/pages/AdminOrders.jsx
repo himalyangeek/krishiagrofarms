@@ -42,6 +42,7 @@ export default function AdminOrders() {
         order.firstName,
         order.lastName,
         order.mobileNo,
+        addr?.mobile,
         order.email,
         addr?.city,
       ]
@@ -55,7 +56,7 @@ export default function AdminOrders() {
   const selectedCustomer = selectedCustomerOrders[0]
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-[1600px] px-4 py-10">
       <h1 className="font-display text-2xl font-semibold text-leaf-900">Orders</h1>
       <p className="mt-1 text-leaf-600">Click any order to see the full customer history and manage it.</p>
 
@@ -94,7 +95,7 @@ export default function AdminOrders() {
                 <p className="mt-2 text-sm font-semibold text-leaf-900">
                   {order.firstName} {order.lastName}
                 </p>
-                <p className="text-sm text-leaf-600">{order.mobileNo || '—'}</p>
+                <p className="text-sm text-leaf-600">{addr?.mobile || order.mobileNo || '—'}</p>
                 <p className="text-sm text-leaf-600">{order.email || '—'}</p>
                 <div className="mt-2 flex items-center justify-between text-sm">
                   <span className="text-leaf-600">
@@ -140,7 +141,7 @@ export default function AdminOrders() {
                     <td className="px-4 py-3 font-medium text-leaf-900">
                       {order.firstName} {order.lastName}
                     </td>
-                    <td className="px-4 py-3 text-leaf-700">{order.mobileNo || '—'}</td>
+                    <td className="px-4 py-3 text-leaf-700">{addr?.mobile || order.mobileNo || '—'}</td>
                     <td className="px-4 py-3 text-leaf-700">{order.email || '—'}</td>
                     <td className="px-4 py-3 text-leaf-700">{addr?.city || '—'}</td>
                     <td className="px-4 py-3 text-leaf-600">

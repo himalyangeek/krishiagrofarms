@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 
 export default function Login() {
   const { login, loginWithGoogle, requestPasswordReset } = useAuth()
+  const { clearCart } = useCart()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -26,6 +28,11 @@ export default function Login() {
     try {
       await login(email, password)
       const dest = location.state?.from?.pathname || '/'
+      // Reset any leftover basket from a previous session/account — but not
+      // if we're bouncing them back to checkout with items they just added.
+      if (dest !== '/checkout') {
+        clearCart()
+      }
       navigate(dest, { replace: true })
     } catch (err) {
       setError(err.message)

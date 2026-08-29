@@ -9,7 +9,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selectedUserID, setSelectedUserID] = useState(null)
+  const [selectedOrderID, setSelectedOrderID] = useState(null)
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -50,15 +50,12 @@ export default function AdminOrders() {
     })
   }, [orders, search])
 
-  // Clicking a row still shows this customer's FULL history, even if the
-  // search above is currently narrowing the list to one matched order.
-  const selectedCustomerOrders = selectedUserID ? orders.filter((o) => o.userID === selectedUserID) : []
-  const selectedCustomer = selectedCustomerOrders[0]
+  const selectedOrder = selectedOrderID ? orders.find((o) => o.orderID === selectedOrderID) : null
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-10">
       <h1 className="font-display text-2xl font-semibold text-leaf-900">Orders</h1>
-      <p className="mt-1 text-leaf-600">Click any order to see the full customer history and manage it.</p>
+      <p className="mt-1 text-leaf-600">Click any order to view and manage its details.</p>
 
       <input
         className="input-field mt-4"
@@ -81,7 +78,7 @@ export default function AdminOrders() {
             return (
               <button
                 key={order.orderID}
-                onClick={() => setSelectedUserID(order.userID)}
+                onClick={() => setSelectedOrderID(order.orderID)}
                 className="card block w-full p-4 text-left"
               >
                 <div className="flex items-center justify-between">
@@ -132,7 +129,7 @@ export default function AdminOrders() {
                 return (
                   <tr
                     key={order.orderID}
-                    onClick={() => setSelectedUserID(order.userID)}
+                    onClick={() => setSelectedOrderID(order.orderID)}
                     className="cursor-pointer border-t border-leaf-100 hover:bg-leaf-50"
                   >
                     <td className="px-4 py-3 font-mono text-xs font-semibold text-leaf-700">
@@ -163,11 +160,11 @@ export default function AdminOrders() {
         </div>
       )}
 
-      {selectedCustomer && (
+      {selectedOrder && (
         <CustomerOrdersDialog
-          customer={selectedCustomer}
-          orders={selectedCustomerOrders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate))}
-          onClose={() => setSelectedUserID(null)}
+          customer={selectedOrder}
+          orders={[selectedOrder]}
+          onClose={() => setSelectedOrderID(null)}
           onOrderUpdated={handleOrderUpdated}
         />
       )}

@@ -43,6 +43,13 @@ export default function AddProduct() {
     setTimeout(() => setNotice(''), 3000)
   }
 
+  function handleDeleted() {
+    setShowDialog(false)
+    setNotice('Product deleted.')
+    loadProducts()
+    setTimeout(() => setNotice(''), 3000)
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <div className="flex items-center justify-between">
@@ -91,6 +98,7 @@ export default function AddProduct() {
           product={dialogProduct}
           onClose={() => setShowDialog(false)}
           onSaved={handleSaved}
+          onDeleted={handleDeleted}
         />
       )}
     </div>

@@ -18,7 +18,7 @@ function blankForm(product) {
   }
 }
 
-export default function ProductFormDialog({ product, onClose, onSaved }) {
+export default function ProductFormDialog({ product, onClose, onSaved, onDeleted }) {
   const { user } = useAuth()
   const isEdit = Boolean(product)
 
@@ -29,6 +29,8 @@ export default function ProductFormDialog({ product, onClose, onSaved }) {
   const [imageError, setImageError] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -90,6 +92,25 @@ export default function ProductFormDialog({ product, onClose, onSaved }) {
       })
     } catch (err) {
       console.warn('Failed to delete old product image:', err)
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    setError('')
+    try {
+      const { error } = await supabase.rpc('admin_delete_product', {
+        p_admin_user_id: user.userID,
+        p_product_id: product.productID,
+      })
+      if (error) throw new Error(error.message)
+      if (product.imageUrl) await deleteOldImage(product.imageUrl)
+      onDeleted()
+    } catch (err) {
+      setError(err.message)
+      setConfirmingDelete(false)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -275,6 +296,41 @@ export default function ProductFormDialog({ product, onClose, onSaved }) {
             {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Add product'}
           </button>
         </form>
+
+        {isEdit && (
+          <div className="mt-4 border-t border-leaf-100 pt-4">
+            {confirmingDelete ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-red-50 p-3">
+                <span className="text-sm text-red-700">Delete "{product.name}" permanently?</span>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                  >
+                    {deleting ? 'Deleting…' : 'Yes, delete'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingDelete(false)}
+                    className="btn-secondary !px-4 !py-1.5 text-xs"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                className="text-sm font-semibold text-red-600 underline"
+              >
+                Delete this product
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

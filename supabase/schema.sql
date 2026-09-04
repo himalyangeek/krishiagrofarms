@@ -555,6 +555,33 @@ begin
 end;
 $$;
 
+-- Delete a product. Same ADMIN check as add_product()/admin_update_product().
+-- Orders keep their own frozen snapshot of what was bought in
+-- "productBasket" (JSON, not a foreign key to Product), so deleting a
+-- product here never breaks past order history.
+create or replace function public.admin_delete_product(
+  p_admin_user_id uuid,
+  p_product_id uuid
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not exists (
+    select 1 from public."User" u
+    where u."userID" = p_admin_user_id and u."userType" = 'ADMIN'
+  ) then
+    raise exception 'NOT_AUTHORIZED';
+  end if;
+
+  delete from public."Product" where "productID" = p_product_id;
+
+  return found;
+end;
+$$;
+
 grant execute on function public.register_user(text, text, text, text) to anon, authenticated;
 grant execute on function public.login_user(text, text) to anon, authenticated;
 grant execute on function public.get_my_profile() to authenticated;
@@ -564,6 +591,7 @@ grant execute on function public.place_order(uuid, json, double precision, text,
 grant execute on function public.get_my_orders(uuid) to anon, authenticated;
 grant execute on function public.add_product(uuid, text, double precision, bigint, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.admin_update_product(uuid, uuid, text, double precision, bigint, text, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.admin_delete_product(uuid, uuid) to anon, authenticated;
 grant execute on function public.admin_get_all_orders(uuid) to anon, authenticated;
 grant execute on function public.admin_update_order(uuid, uuid, text, text) to anon, authenticated;
 

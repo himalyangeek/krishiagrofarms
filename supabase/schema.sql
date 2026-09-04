@@ -522,6 +522,21 @@ grant execute on function public.admin_get_all_orders(uuid) to anon, authenticat
 grant execute on function public.admin_update_order(uuid, uuid, text, text) to anon, authenticated;
 
 -- ============================================================================
+-- Storage bucket for product images. Public read (so product photos display
+-- for anyone), but no client-side write policy — uploads only happen via the
+-- upload-product-image Edge Function, which verifies ADMIN status server-side
+-- with the service-role key before writing. Same pattern as the RPCs above:
+-- never trust the anon key alone to gate a write.
+-- ============================================================================
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Public read product images" on storage.objects;
+create policy "Public read product images" on storage.objects
+  for select using (bucket_id = 'product-images');
+
+-- ============================================================================
 -- Seed products (only inserted if the table is empty, safe to re-run)
 -- ============================================================================
 insert into public."Product" ("name", "description", "composition", "ingredients", "process", "price", "currentStock", "imageUrl", "unit")

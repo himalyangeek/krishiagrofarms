@@ -510,6 +510,51 @@ begin
 end;
 $$;
 
+-- Update an existing product. Same ADMIN check as add_product() — the anon
+-- key alone must never be trusted to gate a write.
+create or replace function public.admin_update_product(
+  p_admin_user_id uuid,
+  p_product_id uuid,
+  p_name text,
+  p_price double precision,
+  p_current_stock bigint,
+  p_image_url text,
+  p_description text,
+  p_composition text,
+  p_ingredients text,
+  p_process text,
+  p_unit text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not exists (
+    select 1 from public."User" u
+    where u."userID" = p_admin_user_id and u."userType" = 'ADMIN'
+  ) then
+    raise exception 'NOT_AUTHORIZED';
+  end if;
+
+  update public."Product"
+  set "name" = p_name,
+      "price" = p_price,
+      "currentStock" = p_current_stock,
+      "imageUrl" = p_image_url,
+      "description" = p_description,
+      "composition" = p_composition,
+      "ingredients" = p_ingredients,
+      "process" = p_process,
+      "unit" = p_unit,
+      "updatedDate" = now()
+  where "productID" = p_product_id;
+
+  return found;
+end;
+$$;
+
 grant execute on function public.register_user(text, text, text, text) to anon, authenticated;
 grant execute on function public.login_user(text, text) to anon, authenticated;
 grant execute on function public.get_my_profile() to authenticated;
@@ -518,6 +563,7 @@ grant execute on function public.change_password(uuid, text, text) to anon, auth
 grant execute on function public.place_order(uuid, json, double precision, text, text) to anon, authenticated;
 grant execute on function public.get_my_orders(uuid) to anon, authenticated;
 grant execute on function public.add_product(uuid, text, double precision, bigint, text, text, text, text, text, text) to anon, authenticated;
+grant execute on function public.admin_update_product(uuid, uuid, text, double precision, bigint, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.admin_get_all_orders(uuid) to anon, authenticated;
 grant execute on function public.admin_update_order(uuid, uuid, text, text) to anon, authenticated;
 

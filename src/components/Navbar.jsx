@@ -37,7 +37,7 @@ export default function Navbar() {
               {isAdmin && (
                 <>
                   <Link to="/admin/add-product" className="hover:text-leaf-900">
-                    Add product
+                    Manage products
                   </Link>
                   <Link to="/admin/orders" className="hover:text-leaf-900">
                     Orders
@@ -86,7 +86,7 @@ export default function Navbar() {
               {isAdmin && (
                 <>
                   <Link to="/admin/add-product" onClick={closeMenu} className="rounded-lg px-3 py-2 hover:bg-leaf-50">
-                    Add product
+                    Manage products
                   </Link>
                   <Link to="/admin/orders" onClick={closeMenu} className="rounded-lg px-3 py-2 hover:bg-leaf-50">
                     Orders

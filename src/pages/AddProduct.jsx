@@ -69,6 +69,7 @@ export default function AddProduct() {
     })
     if (error) throw new Error(error.message)
     if (data?.error) throw new Error(data.error)
+    console.log("data.url", data.url)
     return data.url
   }
 
@@ -92,7 +93,7 @@ export default function AddProduct() {
       if (imageFile) {
         imageUrl = await uploadImage()
       }
-
+      console.log(imageUrl)
       const { error } = await supabase.rpc('add_product', {
         p_admin_user_id: user.userID,
         p_name: form.name.trim(),

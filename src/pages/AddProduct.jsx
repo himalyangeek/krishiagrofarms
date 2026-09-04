@@ -69,6 +69,7 @@ export default function AddProduct() {
     })
     if (error) throw new Error(error.message)
     if (data?.error) throw new Error(data.error)
+    console.log("data.url", data)
     console.log("data.url", data.url)
     return data.url
   }

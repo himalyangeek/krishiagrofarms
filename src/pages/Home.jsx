@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import ProductGrid from '../components/ProductGrid'
 import ProductDetailDialog from '../components/ProductDetailDialog'
+import KrishiAgroImage from '../assets/images/krishiagro.jpg'
 
 export default function Home() {
   const [products, setProducts] = useState([])
@@ -47,7 +48,7 @@ export default function Home() {
           <div className="relative hidden sm:block">
             <div className="aspect-square overflow-hidden rounded-[2rem] border-4 border-leaf-600/40 shadow-soft">
               <img
-                src="https://picsum.photos/seed/organic-farm/640/640"
+                src={KrishiAgroImage}
                 alt="Organic farm field"
                 className="h-full w-full object-cover"
               />
